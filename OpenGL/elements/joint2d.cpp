@@ -9,7 +9,7 @@ using namespace std;
 
 
 Joint2D::Joint2D(OGLTWidget* parent)
-    :Polygon2D(parent),  m_pos(0,0), m_bIsLocked(false), m_pos_locked(0,0)
+    :Polygon2D(parent),  m_pos(0,0), m_pos_locked(0,0), m_bIsLocked(false)
 {
 
     m_cross = new Cross2D(parent);

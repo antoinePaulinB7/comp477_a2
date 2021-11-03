@@ -18,35 +18,33 @@ std::vector<VertexData>  GeometryUtils::createSimpleBox(const QRect& box){
         gscale = 1.0;//global_scale;
     }
 
-       std::vector<VertexData> simple;
+    std::vector<VertexData> simple;
 
-       VertexData v1, v2, v3, v4;
-       v1.position = QVector3D(gscale * box.x(), gscale * box.y(),  0.0f);
-       v1.texCoord = QVector2D(0.0f, 0.0f);
+    VertexData v1, v2, v3, v4;
+    v1.position = QVector3D(gscale * box.x(), gscale * box.y(),  0.0f);
+    v1.texCoord = QVector2D(0.0f, 0.0f);
 
-       v2.position = QVector3D( gscale * box.x(), gscale * (box.y() + box.height()),  0.0f);
-       v2.texCoord = QVector2D(0.0f, 0.0f);
+    v2.position = QVector3D( gscale * box.x(), gscale * (box.y() + box.height()),  0.0f);
+    v2.texCoord = QVector2D(0.0f, 0.0f);
 
-       v3.position = QVector3D( gscale * (box.x() + box.width()), gscale * (box.y() + box.height()),  0.0f);
-       v3.texCoord = QVector2D(0.0f, 0.0f);
+    v3.position = QVector3D( gscale * (box.x() + box.width()), gscale * (box.y() + box.height()),  0.0f);
+    v3.texCoord = QVector2D(0.0f, 0.0f);
 
-       v4.position = QVector3D( gscale * (box.x() + box.width()), gscale * box.y(),  0.0f);
-       v4.texCoord = QVector2D(0.0f, 0.0f);
-
-
-       simple.push_back(v1);
-       simple.push_back(v2);
-       simple.push_back(v3);
-       simple.push_back(v4);
-
-   return simple;
+    v4.position = QVector3D( gscale * (box.x() + box.width()), gscale * box.y(),  0.0f);
+    v4.texCoord = QVector2D(0.0f, 0.0f);
 
 
+    simple.push_back(v1);
+    simple.push_back(v2);
+    simple.push_back(v3);
+    simple.push_back(v4);
+
+    return simple;
 
 }
 
 
-std::vector<VertexData>  GeometryUtils::createAspectRatioBox(double ratio){
+std::vector<VertexData>  GeometryUtils::createAspectRatioBox(double){
 
     std::vector<VertexData> simple;
 #if 0
@@ -107,7 +105,7 @@ bool GeometryUtils::findminmax(float& minx, float& miny, float& maxx, float& max
    minx = maxx = pts[0].position[0];
    miny = maxy = pts[0].position[1];
 
-   for(int i=1;i<pts.size();++i){
+   for(unsigned int i=1;i<pts.size();++i){
        if(minx>pts[i].position[0])
            minx = pts[i].position[0];
        if(maxx<pts[i].position[0])

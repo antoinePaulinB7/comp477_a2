@@ -18,6 +18,7 @@ void Polygon2D::mouse_grab(MouseInfo m){
 }
 
 
+
 void Polygon2D::mouse_drag(MouseInfo m){
     for(unsigned int i=0;i<m_curve.size();++i){
         m_curve[i].position[0]+=m.pos[0]-m.pos0[0];
@@ -77,7 +78,7 @@ bool Polygon2D::initializeGL(){
 
 bool Polygon2D::draw(QMatrix4x4 model, QMatrix4x4 projection){
 
-   // cout<<"poly"<<endl;
+    (void)model;
 
     if (this->m_bHidden)
     {
@@ -89,11 +90,7 @@ bool Polygon2D::draw(QMatrix4x4 model, QMatrix4x4 projection){
         m_bIsInitGL = true;
     }
 
-    // should onlhy call it when something is new
-    //  if(m_bUpdateBuffer){
     updateOGLBuffer();
-    //     m_bUpdateBuffer = false;
-    // }
 
     ShaderManager& sm = m_parent->m_sm;
     QOpenGLShaderProgram* shader = sm.getProgram("line_shader");
@@ -113,9 +110,7 @@ bool Polygon2D::draw(QMatrix4x4 model, QMatrix4x4 projection){
     quintptr offset = 0;
     int vertexLocation = shader->attributeLocation("a_position");
     shader->enableAttributeArray(vertexLocation);
-    //shader->setAttributeBuffer(vertexLocation, GL_FLOAT, offset, 3, sizeof(QVector3D));
     shader->setAttributeBuffer(vertexLocation, GL_FLOAT, offset, 3, sizeof(VertexData));
-    //shader->setAttributeBuffer(vertexLocation, GL_FLOAT, offset, 3, offsetof(VertexData, position));
 
     // Offset for texture coordinate
     offset += sizeof(QVector3D);
@@ -123,18 +118,15 @@ bool Polygon2D::draw(QMatrix4x4 model, QMatrix4x4 projection){
     // Tell OpenGL programmable pipeline how to locate vertex texture coordinate data
     int texcoordLocation = shader->attributeLocation("a_texcoord");
     shader->enableAttributeArray(texcoordLocation);
-    //shader->setAttributeBuffer(texcoordLocation, GL_FLOAT, offset, 2, sizeof(QVector2D));
     shader->setAttributeBuffer(texcoordLocation, GL_FLOAT, offset, 2, sizeof(VertexData));
-    //shader->setAttributeBuffer(texcoordLocation, GL_FLOAT, offset, 2, offsetof(VertexData, texCoord));
 
     m_vao.bind();
     m_lineBuf.bind();
     m_indexlineBuf.bind();
 
     glLineWidth(m_thickness);
-    //glLineWidth(10);
 
-    int N = m_curve.size();
+    int N = static_cast<int>(m_curve.size());
     if(N>0)
         glDrawElements(GL_LINE_STRIP, N, GL_UNSIGNED_SHORT, 0);
 
@@ -152,24 +144,24 @@ bool Polygon2D::updateOGLBuffer(){
 
     m_vao.bind();
     m_lineBuf.bind();
-    m_lineBuf.allocate(&m_curve.front(), m_curve.size() * sizeof(VertexData));
+    m_lineBuf.allocate(&m_curve.front(), static_cast<int>(m_curve.size() * sizeof(VertexData)));
 
     std::vector<GLushort> indices(m_curve.size());
     for(unsigned int j=0;j<indices.size();++j){
         indices[j] = j;
     }
     m_indexlineBuf.bind();
-    m_indexlineBuf.allocate(&indices.front(), indices.size()*sizeof(GLushort));
+    m_indexlineBuf.allocate(&indices.front(), (int)indices.size()*sizeof(GLushort));
 
     return true;
 }
 
 
 bool Polygon2D::save(QDataStream* out){
-
+    (void)out;
     return false;
 }
 bool Polygon2D::load(QDataStream* out){
-
+    (void)out;
     return false;
 }

@@ -6,13 +6,13 @@
 
 DrawElement::DrawElement(OGLTWidget* parent)
     :QOpenGLFunctions(parent->context()),
-      m_parent(parent),
       m_bIsInitGL(false),
       m_bUpdateBuffer(true),
       m_is_movable(true),
       m_bHidden(false),
       m_bUI(true),
-      m_bPicking(true)
+      m_bPicking(true),
+      m_parent(parent)
 {
 
     m_id = QUuid::createUuid().toString().toStdString();

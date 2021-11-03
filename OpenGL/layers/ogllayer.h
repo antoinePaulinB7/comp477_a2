@@ -19,8 +19,8 @@ public:
 
     OGLLayer(OGLTWidget* parent);
 
-    bool m_bIsInitGL;
     OGLTWidget* m_parent;
+    bool m_bIsInitGL;
 
     // if true then it is hidden
     bool m_bHidden;
@@ -58,7 +58,7 @@ public:
     int m_UIMode;
     virtual bool setUIMode(int m){
        m_UIMode = m;
-       return true;
+       return m;
     }
 
 

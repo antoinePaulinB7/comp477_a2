@@ -88,7 +88,7 @@ void MainWindow::on_actionLoad_triggered()
 
     for (auto itr = j["joints"].begin(); itr!= j["joints"].end(); itr++){
         Joint2D* joint = new Joint2D(l->m_parent);
-        joint->m_id = (*itr)["id"];
+        joint->m_id = (*itr)["id"].get<std::string>();
         id_map[joint->m_id] = joint;
         joint->set_locked((*itr)["locked"]);
         QVector2D pos((*itr)["pos_x"], (*itr)["pos_y"]);
@@ -97,7 +97,7 @@ void MainWindow::on_actionLoad_triggered()
     }
     for (auto itr = j["links"].begin(); itr!= j["links"].end(); itr++){
         Link2D* link = new Link2D(l->m_parent);
-        link->m_id = (*itr)["id"];
+        link->m_id = (*itr)["id"].get<std::string>();
         link->set_first_joint(id_map[(*itr)["first_joint_id"]]);
         link->set_second_joint(id_map[(*itr)["second_joint_id"]]);
         link->compute(QVector2D(0,0));

@@ -6,7 +6,6 @@
 #include <math.h>
 
 #include <iostream>
-#include <QDebug>
 
 #include "../layers/ogllayer2d.h"
 
@@ -75,26 +74,26 @@ void OGLTWidget::keyPressEvent(QKeyEvent *event){
     case 'c':
         save_frame_buffer("/Users/stpopa/Documents/ProjectData/AudioZ/Result/test.png");
         m_bpassdown = false;
-    break;
+        break;
     case 'v':
         if(m_layers.size()!=0){
             m_layers[0]->setUIMode(0);
         }
-         m_bpassdown = false;
+        m_bpassdown = false;
         break;
     case 's':
         if(m_layers.size()!=0){
             m_layers[0]->setUIMode(1);
         }
-         m_bpassdown = false;
+        m_bpassdown = false;
+        break;
     case 'p':
         if(m_layers.size()!=0){
             m_layers[0]->setUIMode(2);
         }
-         m_bpassdown = false;
+        m_bpassdown = false;
         break;
    // default:
-
     }
 
     if(m_bpassdown){
@@ -132,6 +131,8 @@ void OGLTWidget::keyReleaseEvent(QKeyEvent *event){
 
 void OGLTWidget::wheelEvent(QWheelEvent *event){
     QPoint p = event->pixelDelta();
+    //cout<<"W: "<<p.x()<<" "<<p.y()<<endl;
+
 
     for(unsigned int i=0;i<m_layers.size();++i){
         m_layers[i]->scroll(p.y());
@@ -165,8 +166,6 @@ void OGLTWidget::mousePressEvent(QMouseEvent *e)
         cout<<"Unknown button!"<<endl;
     }
 
- //   if(e->flags)
-
     for(unsigned int i=0;i<m_layers.size();++i){
         m_layers[i]->mouse_grab(m_mouse);
     }
@@ -185,7 +184,9 @@ void OGLTWidget::mouseReleaseEvent(QMouseEvent *e)
         m_mouse.button = 1;
     } else if(e->button()==Qt::RightButton){
         m_mouse.button = 2;
+    } else {
     }
+
 
     for(unsigned int i=0;i<m_layers.size();++i){
         if(!m_layers[i]->m_bHidden)
@@ -210,6 +211,9 @@ void OGLTWidget::mouseMoveEvent(QMouseEvent *event){
         m_mouse.button = 1;
     } else if(event->button()==Qt::RightButton){
         m_mouse.button = 2;
+    } else {
+      // TODO: the mouse button sometiemes comes incorrect from e
+        //cout<<"Unknown button!"<<endl;
     }
 
     if(m_button_pressed){
@@ -219,6 +223,7 @@ void OGLTWidget::mouseMoveEvent(QMouseEvent *event){
         }
 
     } else {
+
         for(unsigned int i=0;i<m_layers.size();++i){
             if(!m_layers[i]->m_bHidden)
                 m_layers[i]->mouse_hover(m_mouse);
@@ -245,6 +250,7 @@ void OGLTWidget::mouseDoubleClickEvent(QMouseEvent *event){
     } else if(event->button()==Qt::RightButton){
         m_mouse.button = 2;
     } else {
+
         cout<<"Unknown button!"<<endl;
     }
 
@@ -276,17 +282,24 @@ bool OGLTWidget::save_frame_buffer(std::string f){
 }
 
 
-void OGLTWidget::readCurves(QDataStream* in){
-    (void) in;
+// load / save
+
+void OGLTWidget::readCurves(QDataStream*){
     update();
 }
 
-void OGLTWidget::writeCurves(QDataStream* out){
-    (void) out;
+void OGLTWidget::writeCurves(QDataStream*){
+
 }
 
 
 void OGLTWidget::SendMessages(TMessage*){
+
+    for(unsigned int i=0;i<m_layers.size();++i){
+        if(!m_layers[i]->m_bHidden){
+            //m_layers[i]->mouse_grab(mouse);
+        }
+    }
 }
 
 
