@@ -49,10 +49,15 @@ void A2Solution::update(Joint2D* selected, QVector2D mouse_pos){
         jacobian = compute_jacobian(current_state, EPSILON);
         error = compute_error(current_state, qvec_to_eigen(mouse_pos)) * BETA;
 
+        std::cout << "Jacobian" << std::endl << jacobian << std::endl;
+        std::cout << "Error" << std::endl << error << std::endl;
+
         j_transpose = jacobian.transpose();
         identity = MatrixXd::Identity(jacobian.rows(), jacobian.rows());
 
         d_theta = j_transpose * (jacobian * j_transpose + LAMBDA * identity).inverse() * error;
+
+        std::cout << "Delta theta" << std::endl << d_theta << std::endl;
 
         current_state = apply_delta_theta(current_state, d_theta);
 
@@ -150,7 +155,13 @@ MatrixXd A2Solution::compute_jacobian(State state, double epsilon) {
         j(r + 1, 1) = epsilon;
     }
 
-    for (uint32_t c = 1; c < cols; c++) {
+    for (uint32_t i = 0; i < joints.size(); i++) {
+        if (i == 0) {
+            continue;
+        }
+
+        int c = i + 1;
+
         for (uint32_t r = 0; r < rows; r += 2) {
             Joint2D* end_effector = end_effectors[r / 2];
 
@@ -158,11 +169,11 @@ MatrixXd A2Solution::compute_jacobian(State state, double epsilon) {
                 j(r, c) = 0;
                 j(r + 1, c) = 0;
             } else {
-                Joint2D* effector = joints[c - 1];
+                Joint2D* effector = joints[i];
 
-                if (is_descendant(effector, end_effector)) {
+                if (is_descendant(effector, end_effector) || effector == end_effector) {
                     Vector3d end_effector_position = state.joint_positions[end_effector] * Vector3d(0, 0, 1);
-                    Vector3d effector_position = state.joint_positions[effector] * Vector3d(0, 0, 1);
+                    Vector3d effector_position = state.joint_positions[effector->get_parents()[0]] * Vector3d(0, 0, 1);
 
                     Vector3d delta = end_effector_position - effector_position;
 
@@ -214,7 +225,7 @@ State A2Solution::apply_delta_theta(State state, Eigen::VectorXd d_theta) {
         Joint2D* joint = state.joints[i];
         Joint2D* joint_parent = joint->get_parents()[0];
 
-        double theta = d_theta[i];
+        double theta = d_theta[i+1];
 
         Affine2d joint_transform = state.joint_positions[joint];
         Affine2d parent_transform = state.joint_positions[joint_parent];
