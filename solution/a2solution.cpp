@@ -174,7 +174,8 @@ MatrixXd A2Solution::compute_jacobian(State state, double epsilon) {
             } else {
                 Joint2D* effector = joints[i];
 
-                if (is_descendant(effector, end_effector) || effector == end_effector) {
+                if (end_effector == state.selected &&
+                   (is_descendant(effector, end_effector) || effector == end_effector)) {
                     Vector3d end_effector_position = state.joint_positions[end_effector] * Vector3d(0, 0, 1);
                     Vector3d effector_position = state.joint_positions[effector->get_parents()[0]] * Vector3d(0, 0, 1);
 
@@ -182,7 +183,7 @@ MatrixXd A2Solution::compute_jacobian(State state, double epsilon) {
 
                     Vector3d rotation_direction = Vector3d(0,0,1).cross(Vector3d(delta.x(), delta.y(), 0));
 
-//                    rotation_direction.normalize();
+                    rotation_direction.normalize();
 
                     j(r, c) = rotation_direction.x();
                     j(r + 1, c) = rotation_direction.y();
