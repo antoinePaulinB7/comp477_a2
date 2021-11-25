@@ -40,6 +40,7 @@ public:
     static VectorXd compute_error(State state, Vector2d mouse_position);
     static State apply_delta_theta(State state, VectorXd d_theta);
     static void apply_state(State state);
+    static VectorXd clamp_error(State state, VectorXd error);
 
     static bool is_descendant(Joint2D* ancestor, Joint2D* descendant);
     static bool is_ancestor(Joint2D* descendant, Joint2D* ancestor);

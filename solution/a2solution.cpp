@@ -14,10 +14,11 @@
 using Eigen::MatrixXd;
 using Eigen::Vector3d;
 
-const uint32_t MAX_ITER = 100;
-const double_t EPSILON = 1.0;
-const double_t LAMBDA = 25.0;
-const double_t BETA = 0.005;
+const uint32_t MAX_ITER = 50;
+const double_t MAX_ERROR = 1.0;
+const double_t BETA = 1.0;
+const double_t EPSILON = 5;
+const double_t LAMBDA = 35.0;
 
 A2Solution::A2Solution(std::vector<Joint2D*>& joints, std::vector<Link2D*>& links, std::vector<Obstacle2D*>& obstacles)
     :m_joints(joints), m_links(links), m_obstacles(obstacles){
@@ -47,7 +48,9 @@ void A2Solution::update(Joint2D* selected, QVector2D mouse_pos){
 
     for (uint32_t i = 0; i < MAX_ITER; i++) {
         jacobian = compute_jacobian(current_state, EPSILON);
-        error = compute_error(current_state, qvec_to_eigen(mouse_pos)) * BETA;
+        error = compute_error(current_state, qvec_to_eigen(mouse_pos));
+        error = clamp_error(current_state, error);
+        error *= BETA;
 
         std::cout << "Jacobian" << std::endl << jacobian << std::endl;
         std::cout << "Error" << std::endl << error << std::endl;
@@ -179,7 +182,7 @@ MatrixXd A2Solution::compute_jacobian(State state, double epsilon) {
 
                     Vector3d rotation_direction = Vector3d(0,0,1).cross(Vector3d(delta.x(), delta.y(), 0));
 
-                    rotation_direction.normalize();
+//                    rotation_direction.normalize();
 
                     j(r, c) = rotation_direction.x();
                     j(r + 1, c) = rotation_direction.y();
@@ -216,7 +219,17 @@ VectorXd A2Solution::compute_error(State state, Eigen::Vector2d mouse_position) 
 
 State A2Solution::apply_delta_theta(State state, Eigen::VectorXd d_theta) {
     std::map<Joint2D*, Affine2d> new_joint_positions = std::map<Joint2D*, Affine2d>();
-    new_joint_positions.insert({state.root, state.joint_positions[state.root]});
+
+    if (state.selected != state.root) {
+        new_joint_positions.insert({state.root, state.joint_positions[state.root]});
+    } else {
+        Affine2d root_transform = state.joint_positions[state.root];
+        Affine2d translation = Affine2d::Identity();
+        translation.translate(Vector2d(d_theta[0], d_theta[1]));
+
+        Affine2d new_transform = translation * root_transform;
+        new_joint_positions.insert({state.root, new_transform});
+    }
 
     std::cout << "Delta theta size: " << d_theta.size() << std::endl;
     std::cout << "Joint count: " << state.joints.size() << std::endl;
@@ -225,28 +238,23 @@ State A2Solution::apply_delta_theta(State state, Eigen::VectorXd d_theta) {
         Joint2D* joint = state.joints[i];
         Joint2D* joint_parent = joint->get_parents()[0];
 
-        double theta = d_theta[i+1];
-
+        Affine2d new_transform;
         Affine2d joint_transform = state.joint_positions[joint];
         Affine2d parent_transform = state.joint_positions[joint_parent];
         Affine2d new_parent_transform = new_joint_positions[joint_parent];
-        Vector3d center = parent_transform * Vector3d(0,0,1);
-        Vector2d center_2d = Vector2d(center.x(), center.y());
-        Vector3d new_center = new_parent_transform * Vector3d(0,0,1);
-        Vector2d new_center_2d = Vector2d(new_center.x(), new_center.y());
 
-        Affine2d translation_back = Affine2d::Identity();
-        Affine2d rotation = Affine2d::Identity();
-        Affine2d translation_new = Affine2d::Identity();
+        if (state.selected != state.root && (is_descendant(joint, state.selected) || joint == state.selected)) {
+            double theta = d_theta[i+1];
 
-        translation_back.translate(-center_2d);
-        rotation.rotate(theta);
-        translation_new.translate(new_center_2d);
+            Affine2d rotation = Affine2d::Identity();
+            rotation.rotate(theta);
 
-        Affine2d new_transform = translation_new * rotation * translation_back * joint_transform;
+            new_transform = new_parent_transform * rotation * parent_transform.inverse() * joint_transform;
+        } else {
+            new_transform = new_parent_transform * parent_transform.inverse() * joint_transform;
+        }
 
         Vector3d new_position = new_transform * Vector3d(0,0,1);
-
         new_transform = Affine2d::Identity();
         new_transform.translate(Vector2d(new_position.x(), new_position.y()));
 
@@ -262,6 +270,18 @@ void A2Solution::apply_state(State state) {
         Vector3d new_position = joint_transform * Vector3d(0,0,1);
         joint->set_position(eigen_to_qvec(Vector2d(new_position.x(), new_position.y())));
     }
+}
+
+VectorXd A2Solution::clamp_error(State state, Eigen::VectorXd error) {
+    double error_magnitude = error.norm();
+
+    std::cout << "Error magnitude: " << error_magnitude << std::endl;
+
+    if (error_magnitude > MAX_ERROR) {
+        return error * (MAX_ERROR / error_magnitude);
+    }
+
+    return error;
 }
 
 bool A2Solution::is_descendant(Joint2D *ancestor, Joint2D *descendant) {
