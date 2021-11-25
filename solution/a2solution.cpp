@@ -245,6 +245,11 @@ State A2Solution::apply_delta_theta(State state, Eigen::VectorXd d_theta) {
 
         Affine2d new_transform = translation_new * rotation * translation_back * joint_transform;
 
+        Vector3d new_position = new_transform * Vector3d(0,0,1);
+
+        new_transform = Affine2d::Identity();
+        new_transform.translate(Vector2d(new_position.x(), new_position.y()));
+
         new_joint_positions.insert({joint, new_transform});
     }
 
