@@ -15,10 +15,15 @@ using Eigen::MatrixXd;
 using Eigen::Vector3d;
 
 const uint32_t MAX_ITER = 50;
-const double_t MAX_ERROR = 1.0;
+const double_t MAX_TRANSLATION_ERROR = 100.0;
+const double_t MAX_ROTATION_ERROR = 1.0;
+const double_t MAX_TRANSLATION_ERROR_COL = 100.0;
+const double_t MAX_ROTATION_ERROR_COL = 5.0;
 const double_t BETA = 1.0;
-const double_t EPSILON = 5;
-const double_t LAMBDA = 35.0;
+const double_t TRANSLATION_FACTOR = 5.0;
+const double_t LAMBDA = 50.0;
+const double_t OBSTACLE_RADIUS = 150.0;
+const double_t EPSILON = 0.05;
 
 A2Solution::A2Solution(std::vector<Joint2D*>& joints, std::vector<Link2D*>& links, std::vector<Obstacle2D*>& obstacles)
     :m_joints(joints), m_links(links), m_obstacles(obstacles){
@@ -43,24 +48,55 @@ void A2Solution::update(Joint2D* selected, QVector2D mouse_pos){
     // Do one pass of FK
 
     State current_state = get_current_state(selected);
-    MatrixXd jacobian, j_transpose, identity;
-    VectorXd error, d_theta;
+    CollisionState collision_state;
+    MatrixXd jacobian, j_transpose, identity, collision_jacobian;
+    VectorXd error, d_theta, collision_error;
 
     for (uint32_t i = 0; i < MAX_ITER; i++) {
-        jacobian = compute_jacobian(current_state, EPSILON);
+        collision_state = get_collision_state(current_state, m_obstacles, OBSTACLE_RADIUS);
+
+        if (collision_state.is_colliding) {
+            std::cout << "COLLIDING" << std::endl;
+//            break;
+        }
+
+        jacobian = compute_jacobian(current_state, TRANSLATION_FACTOR);
         error = compute_error(current_state, qvec_to_eigen(mouse_pos));
-        error = clamp_error(current_state, error);
+        error = clamp_error(current_state, error, MAX_TRANSLATION_ERROR, MAX_ROTATION_ERROR);
         error *= BETA;
 
-        std::cout << "Jacobian" << std::endl << jacobian << std::endl;
-        std::cout << "Error" << std::endl << error << std::endl;
+        collision_jacobian = compute_collision_jacobian(current_state, collision_state, TRANSLATION_FACTOR);
+        collision_error = compute_collision_error(collision_state);
+        collision_error = clamp_error(current_state, collision_error, MAX_TRANSLATION_ERROR_COL, MAX_ROTATION_ERROR_COL);
+        collision_error *= BETA;
 
-        j_transpose = jacobian.transpose();
-        identity = MatrixXd::Identity(jacobian.rows(), jacobian.rows());
+        std::cout << "Collision Jacobian" << std::endl << collision_jacobian << std::endl;
+        std::cout << "Collision error" << std::endl << collision_error << std::endl;
 
-        d_theta = j_transpose * (jacobian * j_transpose + LAMBDA * identity).inverse() * error;
+//        std::cout << "Jacobian" << std::endl << jacobian << std::endl;
+//        std::cout << "Error" << std::endl << error << std::endl;
 
-        std::cout << "Delta theta" << std::endl << d_theta << std::endl;
+
+        // Check the tutorial slides
+        MatrixXd je = jacobian;
+        VectorXd ee = error;
+
+        double_t an = 0.1; // Figure out what those values should be.
+
+        MatrixXd jo = collision_jacobian;
+        double_t ao = 0.1;
+        VectorXd eo = collision_error;
+
+        MatrixXd dls_m = dls(je, LAMBDA);
+        identity = MatrixXd::Identity(dls_m.rows(), dls_m.rows());
+
+        MatrixXd first_part = dls_m * ee;
+        MatrixXd second_part = an * dls(jo * (identity - (dls_m * je)), LAMBDA);
+        MatrixXd third_part = (ao * eo) - (jo * dls_m * ee);
+
+        d_theta = first_part + second_part * third_part;
+
+//        std::cout << "Delta theta" << std::endl << d_theta << std::endl;
 
         current_state = apply_delta_theta(current_state, d_theta);
 
@@ -75,6 +111,12 @@ void A2Solution::update(Joint2D* selected, QVector2D mouse_pos){
          *  joint_positiions, end_effector_pos = forward_kinematics()
          * endfor
          */
+
+        double_t distance_to_error = ((current_state.joint_transforms[current_state.selected] * Vector3d(0,0,1)).head(2) - qvec_to_eigen(mouse_pos)).norm();
+        if (distance_to_error < EPSILON) {
+            std::cout << "Stopped after iteration(s): " << i + 1 << std::endl;
+            break;
+        }
     }
 
     apply_state(current_state);
@@ -88,7 +130,7 @@ void A2Solution::update(Joint2D* selected, QVector2D mouse_pos){
 }
 
 /**
- * MatrixXf get_jacobian(joint_positions, end_effector) {
+ * MatrixXf get_jacobian(joint_transforms, end_effector) {
  *  int num_cols = num_joints_in_hierarchy;
  *  int num_rows = 2 * end_effectors;
  *  MatrixXf J(num_cols, num_rows);
@@ -124,7 +166,7 @@ State A2Solution::get_current_state(Joint2D* joint) {
 
     std::vector<Joint2D*> family_tree = A2Solution::get_family_tree(root, true);
     std::vector<Joint2D*> end_effectors = std::vector<Joint2D*>();
-    std::map<Joint2D*, Affine2d> joint_positions;
+    std::map<Joint2D*, Affine2d> joint_transforms;
 
     for (uint32_t i = 0; i < family_tree.size(); i++) {
         Joint2D* current = family_tree[i];
@@ -136,13 +178,111 @@ State A2Solution::get_current_state(Joint2D* joint) {
         Affine2d position = Affine2d::Identity();
         position.translate(A2Solution::qvec_to_eigen(current->get_position()));
 
-        joint_positions.insert({current, position});
+        joint_transforms.insert({current, position});
     }
 
-    return State { root, joint, family_tree, end_effectors, joint_positions };
+    return State { root, joint, family_tree, end_effectors, joint_transforms };
 }
 
-MatrixXd A2Solution::compute_jacobian(State state, double epsilon) {
+CollisionState A2Solution::get_collision_state(State state, std::vector<Obstacle2D *> obstacles, double_t radius) {
+    bool is_colliding = false;
+    std::vector<Joint2D*> closest_joints = std::vector<Joint2D*>();
+    std::vector<Vector2d> closest_points = std::vector<Vector2d>();
+    std::vector<Obstacle2D*> closest_obstacles = std::vector<Obstacle2D*>();
+
+    for(uint32_t o = 0; o < obstacles.size(); o++) {
+        Obstacle2D* obstacle = obstacles[o];
+        Vector2d obstacle_position = qvec_to_eigen(obstacle->m_center);
+
+        bool found_point = false;
+        double_t closest_distance = radius;
+
+        if (is_colliding) {
+            break;
+        }
+
+        for (uint32_t i = 0; i < state.joints.size(); i++) {
+            Joint2D* joint = state.joints[i];
+            Vector2d joint_position = (state.joint_transforms[joint] * Vector3d(0,0,1)).head(2);
+
+            double_t distance = (obstacle_position - joint_position).norm();
+
+            if (distance < (joint->get_radius() + obstacle->m_radius + EPSILON)) {
+                is_colliding = true;
+
+                std::cout << "Distance 1: " << distance << ", sum of radii: " << joint->get_radius() + obstacle->m_radius << std::endl;
+
+                break;
+            }
+
+            if (distance < closest_distance) {
+                if (found_point) {
+                    distance = closest_distance;
+
+                    closest_joints.back() = joint;
+                    closest_points.back() = joint_position;
+                    closest_obstacles.back() = obstacle;
+                } else {
+                    found_point = true;
+                    distance = closest_distance;
+
+                    closest_joints.push_back(joint);
+                    closest_points.push_back(joint_position);
+                    closest_obstacles.push_back(obstacle);
+                }
+
+                if (joint->get_parents().size() != 0) {
+                    Joint2D* parent = joint->get_parents()[0];
+                    Vector2d parent_position = (state.joint_transforms[parent] * Vector3d(0,0,1)).head(2);
+
+                    Vector2d joint_to_parent = parent_position - joint_position;
+                    Vector2d joint_to_obstacle = obstacle_position - joint_position;
+
+                    Vector2d joint_to_closest_point = vector_projection(joint_to_obstacle, joint_to_parent);
+
+                    if (joint_to_closest_point.dot(joint_to_parent) > 0) {
+                        Vector2d closest_point_position = joint_position + joint_to_closest_point;
+
+                        double_t distance = (obstacle_position - closest_point_position).norm();
+
+                        if (distance < obstacle->m_radius + EPSILON) {
+                            is_colliding = true;
+
+                            std::cout << "Distance 2: " << distance << ", sum of radii: " << joint->get_radius() + obstacle->m_radius << std::endl;
+                            std::cout << "Joint i: " << i << std::endl;
+                            std::cout << "Joint radius: " << joint->get_radius() << std::endl;
+
+                            break;
+                        }
+
+                        if (distance < closest_distance) {
+                            if (found_point) {
+                                distance = closest_distance;
+
+                                closest_joints.back() = joint;
+                                closest_points.back() = closest_point_position;
+                                closest_obstacles.back() = obstacle;
+                            } else {
+                                found_point = true;
+                                distance = closest_distance;
+
+                                closest_joints.push_back(joint);
+                                closest_points.push_back(closest_point_position);
+                                closest_obstacles.push_back(obstacle);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return CollisionState { is_colliding, closest_joints, closest_points, closest_obstacles };
+}
+
+
+
+MatrixXd A2Solution::compute_jacobian(State state, double translation_factor) {
     std::vector<Joint2D*> joints = state.joints;
     std::vector<Joint2D*> end_effectors = state.end_effectors;
 
@@ -152,10 +292,10 @@ MatrixXd A2Solution::compute_jacobian(State state, double epsilon) {
     MatrixXd j = MatrixXd::Zero(rows, cols);
 
     for (uint32_t r = 0; r < rows; r += 2) {
-        j(r, 0) = epsilon;
+        j(r, 0) = translation_factor;
         j(r, 1) = 0;
         j(r + 1, 0) = 0;
-        j(r + 1, 1) = epsilon;
+        j(r + 1, 1) = translation_factor;
     }
 
     for (uint32_t i = 0; i < joints.size(); i++) {
@@ -176,10 +316,65 @@ MatrixXd A2Solution::compute_jacobian(State state, double epsilon) {
 
                 if (end_effector == state.selected &&
                    (is_descendant(effector, end_effector) || effector == end_effector)) {
-                    Vector3d end_effector_position = state.joint_positions[end_effector] * Vector3d(0, 0, 1);
-                    Vector3d effector_position = state.joint_positions[effector->get_parents()[0]] * Vector3d(0, 0, 1);
+                    Vector3d end_effector_position = state.joint_transforms[end_effector] * Vector3d(0, 0, 1);
+                    Vector3d effector_position = state.joint_transforms[effector->get_parents()[0]] * Vector3d(0, 0, 1);
 
                     Vector3d delta = end_effector_position - effector_position;
+
+                    Vector3d rotation_direction = Vector3d(0,0,1).cross(Vector3d(delta.x(), delta.y(), 0));
+
+//                    rotation_direction.normalize();
+
+                    j(r, c) = rotation_direction.x();
+                    j(r + 1, c) = rotation_direction.y();
+                } else {
+                    j(r, c) = 0;
+                    j(r + 1, c) = 0;
+                }
+            }
+        }
+    }
+
+    return j;
+}
+
+MatrixXd A2Solution::compute_collision_jacobian(State state, CollisionState collision_state, double_t translation_factor) {
+    std::vector<Joint2D*> joints = state.joints;
+    std::vector<Joint2D*> end_effectors = collision_state.closest_joints;
+
+    uint32_t rows = 2 * end_effectors.size();
+    uint32_t cols = 1 + joints.size();
+
+    MatrixXd j = MatrixXd::Zero(rows, cols);
+
+    for (uint32_t r = 0; r < rows; r += 2) {
+        j(r, 0) = translation_factor;
+        j(r, 1) = 0;
+        j(r + 1, 0) = 0;
+        j(r + 1, 1) = translation_factor;
+    }
+
+    for (uint32_t i = 0; i < joints.size(); i++) {
+        if (i == 0) {
+            continue;
+        }
+
+        int c = i + 1;
+
+        for (uint32_t r = 0; r < rows; r += 2) {
+            Joint2D* end_effector = end_effectors[r / 2];
+
+            if (end_effector->get_parents().size() == 0) {
+                j(r, c) = 0;
+                j(r + 1, c) = 0;
+            } else {
+                Joint2D* effector = joints[i];
+
+                if ((is_descendant(effector, end_effector) || effector == end_effector)) {
+                    Vector2d end_effector_position = collision_state.closest_points[r / 2];
+                    Vector2d effector_position = (state.joint_transforms[effector->get_parents()[0]] * Vector3d(0, 0, 1)).head(2);
+
+                    Vector2d delta = end_effector_position - effector_position;
 
                     Vector3d rotation_direction = Vector3d(0,0,1).cross(Vector3d(delta.x(), delta.y(), 0));
 
@@ -206,7 +401,7 @@ VectorXd A2Solution::compute_error(State state, Eigen::Vector2d mouse_position) 
         Joint2D* current = state.end_effectors[r / 2];
 
         if (current == state.selected) {
-            Affine2d transform = state.joint_positions[current];
+            Affine2d transform = state.joint_transforms[current];
             Vector3d position = transform * Vector3d(0, 0, 1);
             Vector2d mouse_error = mouse_position - Vector2d(position.x(), position.y());
 
@@ -218,71 +413,117 @@ VectorXd A2Solution::compute_error(State state, Eigen::Vector2d mouse_position) 
     return error;
 }
 
+VectorXd A2Solution::compute_collision_error(CollisionState collision_state) {
+    uint32_t rows = 2 * collision_state.closest_joints.size();
+    VectorXd error = VectorXd::Zero(rows);
+
+    for (uint32_t r = 0; r < rows; r += 2) {
+        Joint2D* current = collision_state.closest_joints[r / 2];
+
+        if (current->get_parents().size() != 0) {
+            Obstacle2D* closest_obstacle = collision_state.closest_obstacles[r / 2];
+            Vector2d closest_point_position = collision_state.closest_points[r / 2];
+            Vector2d obstacle_position = qvec_to_eigen(closest_obstacle->m_center);
+
+            Vector2d away_vector = (closest_point_position - obstacle_position).normalized();
+
+            error(r) = away_vector.x();
+            error(r + 1) = away_vector.y();
+        }
+    }
+
+    return error;
+}
+
 State A2Solution::apply_delta_theta(State state, Eigen::VectorXd d_theta) {
-    std::map<Joint2D*, Affine2d> new_joint_positions = std::map<Joint2D*, Affine2d>();
+    std::map<Joint2D*, Affine2d> new_joint_transforms = std::map<Joint2D*, Affine2d>();
 
     if (state.selected != state.root) {
-        new_joint_positions.insert({state.root, state.joint_positions[state.root]});
+        new_joint_transforms.insert({state.root, state.joint_transforms[state.root]});
     } else {
-        Affine2d root_transform = state.joint_positions[state.root];
+        Affine2d root_transform = state.joint_transforms[state.root];
         Affine2d translation = Affine2d::Identity();
         translation.translate(Vector2d(d_theta[0], d_theta[1]));
 
         Affine2d new_transform = translation * root_transform;
-        new_joint_positions.insert({state.root, new_transform});
+        new_joint_transforms.insert({state.root, new_transform});
     }
 
-    std::cout << "Delta theta size: " << d_theta.size() << std::endl;
-    std::cout << "Joint count: " << state.joints.size() << std::endl;
+//    std::cout << "Delta theta size: " << d_theta.size() << std::endl;
+//    std::cout << "Joint count: " << state.joints.size() << std::endl;
 
     for (uint32_t i = 1; i < state.joints.size(); i++) {
         Joint2D* joint = state.joints[i];
         Joint2D* joint_parent = joint->get_parents()[0];
 
         Affine2d new_transform;
-        Affine2d joint_transform = state.joint_positions[joint];
-        Affine2d parent_transform = state.joint_positions[joint_parent];
-        Affine2d new_parent_transform = new_joint_positions[joint_parent];
+        Affine2d joint_transform = state.joint_transforms[joint];
+        Affine2d parent_transform = state.joint_transforms[joint_parent];
+        Affine2d new_parent_transform = new_joint_transforms[joint_parent];
 
-        if (state.selected != state.root && (is_descendant(joint, state.selected) || joint == state.selected)) {
-            double theta = d_theta[i+1];
+//        if (state.selected != state.root && (is_descendant(joint, state.selected) || joint == state.selected)) {
+//            double theta = d_theta[i+1];
 
-            Affine2d rotation = Affine2d::Identity();
-            rotation.rotate(theta);
+//            Affine2d rotation = Affine2d::Identity();
+//            rotation.rotate(theta);
 
-            new_transform = new_parent_transform * rotation * parent_transform.inverse() * joint_transform;
-        } else {
-            new_transform = new_parent_transform * parent_transform.inverse() * joint_transform;
-        }
+//            new_transform = new_parent_transform * rotation * parent_transform.inverse() * joint_transform;
+//        } else {
+//            new_transform = new_parent_transform * parent_transform.inverse() * joint_transform;
+//        }
+
+        double theta = d_theta[i+1];
+
+        Affine2d rotation = Affine2d::Identity();
+        rotation.rotate(theta);
+
+        new_transform = new_parent_transform * rotation * parent_transform.inverse() * joint_transform;
 
         Vector3d new_position = new_transform * Vector3d(0,0,1);
         new_transform = Affine2d::Identity();
         new_transform.translate(Vector2d(new_position.x(), new_position.y()));
 
-        new_joint_positions.insert({joint, new_transform});
+        new_joint_transforms.insert({joint, new_transform});
     }
 
-    return { state.root, state.selected, state.joints, state.end_effectors, new_joint_positions };
+    return { state.root, state.selected, state.joints, state.end_effectors, new_joint_transforms };
 }
 
 void A2Solution::apply_state(State state) {
     for (Joint2D* joint : state.joints) {
-        Affine2d joint_transform = state.joint_positions[joint];
+        Affine2d joint_transform = state.joint_transforms[joint];
         Vector3d new_position = joint_transform * Vector3d(0,0,1);
         joint->set_position(eigen_to_qvec(Vector2d(new_position.x(), new_position.y())));
     }
 }
 
-VectorXd A2Solution::clamp_error(State state, Eigen::VectorXd error) {
-    double error_magnitude = error.norm();
+VectorXd A2Solution::clamp_error(State state, Eigen::VectorXd error, double_t max_translation_error, double_t max_rotation_error) {
+    VectorXd copy_of_error = error;
+    std::cout << copy_of_error.size() << std::endl;
 
-    std::cout << "Error magnitude: " << error_magnitude << std::endl;
+    if (copy_of_error.size() < 2) return copy_of_error;
 
-    if (error_magnitude > MAX_ERROR) {
-        return error * (MAX_ERROR / error_magnitude);
+    VectorXd translation_error = copy_of_error.head(2);
+    VectorXd rotation_error = copy_of_error.tail(error.size() - 2);
+
+    double_t translation_magnitude = translation_error.norm();
+    double_t rotation_magnitude = rotation_error.norm();
+
+//    std::cout << "Translation error mag: " << translation_magnitude
+//              << ", Rotation error mag: " << rotation_magnitude << std::endl;
+
+    if (translation_magnitude > max_translation_error) {
+        translation_error *= (max_translation_error / translation_magnitude);
     }
 
-    return error;
+    if (rotation_magnitude > max_rotation_error) {
+        rotation_error *= (max_rotation_error / rotation_magnitude);
+    }
+
+    copy_of_error.head(2) = translation_error;
+    copy_of_error.tail(error.size() - 2) = rotation_error;
+
+    return copy_of_error;
 }
 
 bool A2Solution::is_descendant(Joint2D *ancestor, Joint2D *descendant) {
@@ -378,6 +619,23 @@ std::vector<Joint2D*> A2Solution::get_family_tree(Joint2D* joint, bool descendan
     return family_tree;
 }
 
+MatrixXd A2Solution::dls(Eigen::MatrixXd jacobian, double_t lambda) {
+    MatrixXd transpose = jacobian.transpose();
+    MatrixXd identity = MatrixXd::Identity(jacobian.rows(), jacobian.rows());
+
+    return transpose * (jacobian * transpose + lambda * identity).inverse();
+}
+
+Vector2d A2Solution::vector_projection(Eigen::Vector2d a, Eigen::Vector2d b) {
+    double_t coeff_a = a.dot(b);
+    double_t coeff_b = b.dot(b);
+
+    Vector2d projection = b;
+    projection *= (coeff_a / coeff_b);
+
+    return projection;
+}
+
 Vector2d A2Solution::qvec_to_eigen(QVector2D qvec) {
     return Vector2d(qvec.x(), -qvec.y());
 }
@@ -399,6 +657,12 @@ void A2Solution::test_eigen_library(){
 
     std::cout << "rows " << mat.rows() << std::endl;
     std::cout << "cols " << mat.cols() << std::endl;
+
+    std::cout << "Dot product 1: " << Vector2d(0,1).dot(Vector2d(0,-1)) << std::endl;
+    std::cout << "Dot product 2: " << Vector2d(0,1).dot(Vector2d(0,1)) << std::endl;
+    std::cout << "Dot product 3: " << Vector2d(0,-1).dot(Vector2d(0,-1)) << std::endl;
+    std::cout << "Dot product 4: " << Vector2d(0,-1).dot(Vector2d(0,1)) << std::endl;
+    std::cout << "Vector projection: " << std::endl << vector_projection(Vector2d(1,-1), Vector2d(0,2)) << std::endl;
 
     // Fills in matrix
     for(int row=0;row<mat.rows();row++){
