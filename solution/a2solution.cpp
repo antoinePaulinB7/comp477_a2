@@ -17,13 +17,16 @@ using Eigen::Vector3d;
 const uint32_t MAX_ITER = 50;
 const double_t MAX_TRANSLATION_ERROR = 100.0;
 const double_t MAX_ROTATION_ERROR = 1.0;
-const double_t MAX_TRANSLATION_ERROR_COL = 100.0;
-const double_t MAX_ROTATION_ERROR_COL = 5.0;
+const double_t MAX_ERROR_COL = 1.0;
 const double_t BETA = 1.0;
-const double_t TRANSLATION_FACTOR = 5.0;
+const double_t TRANSLATION_FACTOR = 1.0;
 const double_t LAMBDA = 50.0;
-const double_t OBSTACLE_RADIUS = 150.0;
+const double_t OBSTACLE_RADIUS = 20.0;
+const double_t OBSTACLE_CHECKING_RADIUS = 60.0;
 const double_t EPSILON = 0.05;
+const double_t D_SOI = OBSTACLE_CHECKING_RADIUS * 1.0;
+const double_t D_UG = OBSTACLE_CHECKING_RADIUS * 0.75;
+const double_t D_TA = OBSTACLE_CHECKING_RADIUS * 0.50;
 
 A2Solution::A2Solution(std::vector<Joint2D*>& joints, std::vector<Link2D*>& links, std::vector<Obstacle2D*>& obstacles)
     :m_joints(joints), m_links(links), m_obstacles(obstacles){
@@ -53,11 +56,11 @@ void A2Solution::update(Joint2D* selected, QVector2D mouse_pos){
     VectorXd error, d_theta, collision_error;
 
     for (uint32_t i = 0; i < MAX_ITER; i++) {
-        collision_state = get_collision_state(current_state, m_obstacles, OBSTACLE_RADIUS);
+        collision_state = get_collision_state(current_state, m_obstacles, OBSTACLE_CHECKING_RADIUS);
 
         if (collision_state.is_colliding) {
             std::cout << "COLLIDING" << std::endl;
-//            break;
+            break;
         }
 
         jacobian = compute_jacobian(current_state, TRANSLATION_FACTOR);
@@ -65,26 +68,25 @@ void A2Solution::update(Joint2D* selected, QVector2D mouse_pos){
         error = clamp_error(current_state, error, MAX_TRANSLATION_ERROR, MAX_ROTATION_ERROR);
         error *= BETA;
 
-        collision_jacobian = compute_collision_jacobian(current_state, collision_state, TRANSLATION_FACTOR);
+        collision_jacobian = compute_collision_jacobian(current_state, collision_state, TRANSLATION_FACTOR, OBSTACLE_CHECKING_RADIUS);
         collision_error = compute_collision_error(collision_state);
-        collision_error = clamp_error(current_state, collision_error, MAX_TRANSLATION_ERROR_COL, MAX_ROTATION_ERROR_COL);
+        collision_error = clamp_collision_error(current_state, collision_error, MAX_ERROR_COL);
         collision_error *= BETA;
 
         std::cout << "Collision Jacobian" << std::endl << collision_jacobian << std::endl;
         std::cout << "Collision error" << std::endl << collision_error << std::endl;
-
-//        std::cout << "Jacobian" << std::endl << jacobian << std::endl;
-//        std::cout << "Error" << std::endl << error << std::endl;
-
+        std::cout << "Closest distance: " << collision_state.closest_distance << std::endl;
 
         // Check the tutorial slides
         MatrixXd je = jacobian;
         VectorXd ee = error;
 
-        double_t an = 0.1; // Figure out what those values should be.
+        double_t dsoi_dug = D_SOI - D_UG;
+        double_t dug_dta = D_UG - D_TA;
+        double_t an = std::min(1.0, 1 - (collision_state.closest_distance - D_UG) / dsoi_dug); // Figure out what those values should be.
 
         MatrixXd jo = collision_jacobian;
-        double_t ao = 0.1;
+        double_t ao = 0.1; //std::max(0.1, std::min(0.5, 1 - (collision_state.closest_distance - D_TA) / dug_dta));
         VectorXd eo = collision_error;
 
         MatrixXd dls_m = dls(je, LAMBDA);
@@ -96,64 +98,13 @@ void A2Solution::update(Joint2D* selected, QVector2D mouse_pos){
 
         d_theta = first_part + second_part * third_part;
 
-//        std::cout << "Delta theta" << std::endl << d_theta << std::endl;
+        std::cout << "an: " << an << std::endl << "ao: " << ao << std::endl;
 
         current_state = apply_delta_theta(current_state, d_theta);
-
-        /**
-         * for int = 0, i < NUM_ITERATIONS, i++
-         *  J = compute_jacobian()
-         *  e = get_error(end_effector, mouse_pos) // vector from end effector to mouse_pos
-         *  lambda = 5 - 50 // try stuff (can be variable, function of size of hierarchy and error vector size)
-         *
-         *  deltaTheta = J^T * (J * J^T + lambda * I)^-1 * e
-         *  theta = theta + deltaTheta
-         *  joint_positiions, end_effector_pos = forward_kinematics()
-         * endfor
-         */
-
-        double_t distance_to_error = ((current_state.joint_transforms[current_state.selected] * Vector3d(0,0,1)).head(2) - qvec_to_eigen(mouse_pos)).norm();
-        if (distance_to_error < EPSILON) {
-            std::cout << "Stopped after iteration(s): " << i + 1 << std::endl;
-            break;
-        }
     }
 
     apply_state(current_state);
-
-    // Loop over joint and link positions
-        // If position or joint or link is inside obstacle, stop the update
-
-    // Apply new joint positions
-
-
 }
-
-/**
- * MatrixXf get_jacobian(joint_transforms, end_effector) {
- *  int num_cols = num_joints_in_hierarchy;
- *  int num_rows = 2 * end_effectors;
- *  MatrixXf J(num_cols, num_rows);
- *
- *  for (int c = 0; c < num_cols; c++) {
- *      // Figure out which joint this column represents
- *      joint <-- // using our index, compute the joint
- *      // Does rotating this joint move our end effector?
- *      if (!is_child(end_effector, joint)) {
- *          J(c, 0) = 0;
- *          J(c, 1) = 0;
- *      } else {
- *          Vector3f axis_of_rotation = Vector3f(0,0,1);
- *          Vector3f entry = axis_of_rotation.cross(end_effector_pos - joint_pos);
- *
- *          J(c, 0) = entry(0);
- *          J(c, 1) = entry(1);
- *      }
- *  }
- *
- *  return J;
- * }
- */
 
 State A2Solution::get_current_state(Joint2D* joint) {
     Joint2D* current = joint;
@@ -189,7 +140,7 @@ CollisionState A2Solution::get_collision_state(State state, std::vector<Obstacle
     std::vector<Joint2D*> closest_joints = std::vector<Joint2D*>();
     std::vector<Vector2d> closest_points = std::vector<Vector2d>();
     std::vector<Obstacle2D*> closest_obstacles = std::vector<Obstacle2D*>();
-
+    double_t global_closest_distance = radius;
     for(uint32_t o = 0; o < obstacles.size(); o++) {
         Obstacle2D* obstacle = obstacles[o];
         Vector2d obstacle_position = qvec_to_eigen(obstacle->m_center);
@@ -197,12 +148,17 @@ CollisionState A2Solution::get_collision_state(State state, std::vector<Obstacle
         bool found_point = false;
         double_t closest_distance = radius;
 
-        if (is_colliding) {
-            break;
-        }
+//        if (is_colliding) {
+//            break;
+//        }
 
         for (uint32_t i = 0; i < state.joints.size(); i++) {
             Joint2D* joint = state.joints[i];
+
+            if (joint == state.selected) {
+                continue;
+            }
+
             Vector2d joint_position = (state.joint_transforms[joint] * Vector3d(0,0,1)).head(2);
 
             double_t distance = (obstacle_position - joint_position).norm();
@@ -212,19 +168,19 @@ CollisionState A2Solution::get_collision_state(State state, std::vector<Obstacle
 
                 std::cout << "Distance 1: " << distance << ", sum of radii: " << joint->get_radius() + obstacle->m_radius << std::endl;
 
-                break;
+//                break;
             }
 
             if (distance < closest_distance) {
                 if (found_point) {
-                    distance = closest_distance;
+                    closest_distance = distance;
 
                     closest_joints.back() = joint;
                     closest_points.back() = joint_position;
                     closest_obstacles.back() = obstacle;
                 } else {
                     found_point = true;
-                    distance = closest_distance;
+                    closest_distance = distance;
 
                     closest_joints.push_back(joint);
                     closest_points.push_back(joint_position);
@@ -252,19 +208,19 @@ CollisionState A2Solution::get_collision_state(State state, std::vector<Obstacle
                             std::cout << "Joint i: " << i << std::endl;
                             std::cout << "Joint radius: " << joint->get_radius() << std::endl;
 
-                            break;
+//                            break;
                         }
 
                         if (distance < closest_distance) {
                             if (found_point) {
-                                distance = closest_distance;
+                                closest_distance = distance;
 
                                 closest_joints.back() = joint;
                                 closest_points.back() = closest_point_position;
                                 closest_obstacles.back() = obstacle;
                             } else {
                                 found_point = true;
-                                distance = closest_distance;
+                                closest_distance = distance;
 
                                 closest_joints.push_back(joint);
                                 closest_points.push_back(closest_point_position);
@@ -275,9 +231,13 @@ CollisionState A2Solution::get_collision_state(State state, std::vector<Obstacle
                 }
             }
         }
+
+        if (closest_distance < global_closest_distance) {
+            global_closest_distance = closest_distance;
+        }
     }
 
-    return CollisionState { is_colliding, closest_joints, closest_points, closest_obstacles };
+    return CollisionState { is_colliding, closest_joints, closest_points, closest_obstacles, global_closest_distance };
 }
 
 
@@ -314,8 +274,7 @@ MatrixXd A2Solution::compute_jacobian(State state, double translation_factor) {
             } else {
                 Joint2D* effector = joints[i];
 
-                if (end_effector == state.selected &&
-                   (is_descendant(effector, end_effector) || effector == end_effector)) {
+                if (end_effector == state.selected && can_affect(end_effector, effector)) {
                     Vector3d end_effector_position = state.joint_transforms[end_effector] * Vector3d(0, 0, 1);
                     Vector3d effector_position = state.joint_transforms[effector->get_parents()[0]] * Vector3d(0, 0, 1);
 
@@ -338,7 +297,7 @@ MatrixXd A2Solution::compute_jacobian(State state, double translation_factor) {
     return j;
 }
 
-MatrixXd A2Solution::compute_collision_jacobian(State state, CollisionState collision_state, double_t translation_factor) {
+MatrixXd A2Solution::compute_collision_jacobian(State state, CollisionState collision_state, double_t translation_factor, double_t obstacle_radius) {
     std::vector<Joint2D*> joints = state.joints;
     std::vector<Joint2D*> end_effectors = collision_state.closest_joints;
 
@@ -370,15 +329,13 @@ MatrixXd A2Solution::compute_collision_jacobian(State state, CollisionState coll
             } else {
                 Joint2D* effector = joints[i];
 
-                if ((is_descendant(effector, end_effector) || effector == end_effector)) {
+                if (can_affect(end_effector, effector)) {//if ((is_descendant(effector, end_effector) || effector == end_effector)) {
                     Vector2d end_effector_position = collision_state.closest_points[r / 2];
                     Vector2d effector_position = (state.joint_transforms[effector->get_parents()[0]] * Vector3d(0, 0, 1)).head(2);
 
                     Vector2d delta = end_effector_position - effector_position;
 
                     Vector3d rotation_direction = Vector3d(0,0,1).cross(Vector3d(delta.x(), delta.y(), 0));
-
-                    rotation_direction.normalize();
 
                     j(r, c) = rotation_direction.x();
                     j(r + 1, c) = rotation_direction.y();
@@ -425,7 +382,7 @@ VectorXd A2Solution::compute_collision_error(CollisionState collision_state) {
             Vector2d closest_point_position = collision_state.closest_points[r / 2];
             Vector2d obstacle_position = qvec_to_eigen(closest_obstacle->m_center);
 
-            Vector2d away_vector = (closest_point_position - obstacle_position).normalized();
+            Vector2d away_vector = (closest_point_position - obstacle_position);
 
             error(r) = away_vector.x();
             error(r + 1) = away_vector.y();
@@ -524,6 +481,68 @@ VectorXd A2Solution::clamp_error(State state, Eigen::VectorXd error, double_t ma
     copy_of_error.tail(error.size() - 2) = rotation_error;
 
     return copy_of_error;
+}
+
+VectorXd A2Solution::clamp_collision_error(State state, Eigen::VectorXd error, double_t max_collision_error) {
+    VectorXd copy_of_error = error;
+
+    double_t error_magnitude = copy_of_error.norm();
+
+    if (error_magnitude > max_collision_error) {
+        copy_of_error *= (max_collision_error / error_magnitude);
+    }
+
+    return copy_of_error;
+}
+
+bool A2Solution::can_affect(Joint2D *effector, Joint2D *effected) {
+    std::vector<Joint2D*> family_tree = get_family_tree(effector, false);
+    std::reverse(family_tree.begin(), family_tree.end());
+
+//    std::cout << "family size: " << family_tree.size() << std::endl;
+
+    if (effector == effected) {
+        return true;
+    }
+
+    if (effected->is_locked()) {
+        return false;
+    }
+
+    for (uint32_t i = 0; i < family_tree.size(); i++) {
+        Joint2D* current_joint = family_tree[i];
+
+//        std::cout << "current joint pos: \n" << qvec_to_eigen(current_joint->get_position()) << std::endl;
+
+        if(current_joint->get_children().size() > 1) {
+            std::vector<Joint2D*> child_family = get_family_tree(current_joint, true);
+
+            for (uint32_t j = 0; j < child_family.size(); j++) {
+                Joint2D* current_child = child_family[j];
+
+                if (current_child->is_locked() && current_child != effector) {
+//                    std::cout << "refusal 1" << std::endl;
+                    return false;
+                }
+            }
+        }
+
+        if (current_joint->is_locked() && current_joint != effector) {
+//            std::cout << "refusal 2" << std::endl;
+//            std::cout << qvec_to_eigen(current_joint->get_position()) << std::endl;
+//            std::cout << qvec_to_eigen(effector->get_position()) << std::endl;
+//            std::cout << qvec_to_eigen(effected->get_position()) << std::endl;
+            return false;
+        }
+
+        if (current_joint == effected) {
+            return true;
+        }
+    }
+
+
+//    std::cout << "refusal 3" << std::endl;
+    return false;
 }
 
 bool A2Solution::is_descendant(Joint2D *ancestor, Joint2D *descendant) {

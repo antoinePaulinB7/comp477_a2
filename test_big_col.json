@@ -1,0 +1,161 @@
+{
+    "joints": [
+        {
+            "id": "{af702535-2682-4d54-bfc3-adfe086547cd}",
+            "locked": true,
+            "pos_x": 281.14556884765625,
+            "pos_y": 91.34465026855469
+        },
+        {
+            "id": "{5f8621aa-448e-4495-8377-9511867dcd97}",
+            "locked": false,
+            "pos_x": 388.27935791015625,
+            "pos_y": 149.57437133789063
+        },
+        {
+            "id": "{a15663de-7823-457f-aa5a-a60a50e073dc}",
+            "locked": false,
+            "pos_x": 331.355712890625,
+            "pos_y": 107.80500030517578
+        },
+        {
+            "id": "{2e2a67f3-a871-4d67-875c-f23b55dc1ff1}",
+            "locked": false,
+            "pos_x": 462.0639953613281,
+            "pos_y": 148.68707275390625
+        },
+        {
+            "id": "{0307edfd-03ad-4428-ab5c-0bafcfce6bef}",
+            "locked": false,
+            "pos_x": 524.8607177734375,
+            "pos_y": 147.93186950683594
+        },
+        {
+            "id": "{053a7bdd-93c9-4563-b8bb-cd1be4e7f88f}",
+            "locked": true,
+            "pos_x": 600.2877197265625,
+            "pos_y": 147.03565979003906
+        },
+        {
+            "id": "{94cce4c6-5d8d-41b1-bf19-52456c19f9eb}",
+            "locked": false,
+            "pos_x": 416.10968017578125,
+            "pos_y": 203.3372344970703
+        },
+        {
+            "id": "{e381d3c7-b871-4cb3-bab2-d483f8f51e67}",
+            "locked": false,
+            "pos_x": 480.9842834472656,
+            "pos_y": 225.8822479248047
+        },
+        {
+            "id": "{b6b731ca-779c-4a8b-be7e-bdbc9498342e}",
+            "locked": false,
+            "pos_x": 526.434814453125,
+            "pos_y": 224.07235717773438
+        },
+        {
+            "id": "{c946f628-0c9c-4982-99bf-734f3786ba1a}",
+            "locked": true,
+            "pos_x": 577.0,
+            "pos_y": 202.0
+        },
+        {
+            "id": "{525d5c9c-cdb6-4976-8c27-b77546f72530}",
+            "locked": false,
+            "pos_x": 455.08270263671875,
+            "pos_y": 251.06651306152344
+        },
+        {
+            "id": "{f47cd34c-928f-4912-912b-f7ace008eb46}",
+            "locked": false,
+            "pos_x": 498.9385986328125,
+            "pos_y": 303.0450134277344
+        },
+        {
+            "id": "{08322f24-2a48-4ab9-8cfb-95a56caef464}",
+            "locked": true,
+            "pos_x": 538.1731567382813,
+            "pos_y": 351.8875427246094
+        }
+    ],
+    "links": [
+        {
+            "first_joint_id": "{af702535-2682-4d54-bfc3-adfe086547cd}",
+            "id": "{1913f3c1-7222-4d70-aa96-59d14a44fbb1}",
+            "second_joint_id": "{a15663de-7823-457f-aa5a-a60a50e073dc}"
+        },
+        {
+            "first_joint_id": "{a15663de-7823-457f-aa5a-a60a50e073dc}",
+            "id": "{d4f03395-7259-47a7-8943-dfebbc2ad3d4}",
+            "second_joint_id": "{5f8621aa-448e-4495-8377-9511867dcd97}"
+        },
+        {
+            "first_joint_id": "{5f8621aa-448e-4495-8377-9511867dcd97}",
+            "id": "{aa2ac6ec-49e1-400c-8feb-af21061cae18}",
+            "second_joint_id": "{2e2a67f3-a871-4d67-875c-f23b55dc1ff1}"
+        },
+        {
+            "first_joint_id": "{2e2a67f3-a871-4d67-875c-f23b55dc1ff1}",
+            "id": "{c960060e-5baf-4a39-9a8d-288932ef70e1}",
+            "second_joint_id": "{0307edfd-03ad-4428-ab5c-0bafcfce6bef}"
+        },
+        {
+            "first_joint_id": "{0307edfd-03ad-4428-ab5c-0bafcfce6bef}",
+            "id": "{acc222f6-4a62-4bf5-9b4b-cb86f385566a}",
+            "second_joint_id": "{053a7bdd-93c9-4563-b8bb-cd1be4e7f88f}"
+        },
+        {
+            "first_joint_id": "{5f8621aa-448e-4495-8377-9511867dcd97}",
+            "id": "{8c686fe7-5a1b-4bd4-b2e5-412456890f0b}",
+            "second_joint_id": "{94cce4c6-5d8d-41b1-bf19-52456c19f9eb}"
+        },
+        {
+            "first_joint_id": "{94cce4c6-5d8d-41b1-bf19-52456c19f9eb}",
+            "id": "{4b9deab9-4b2e-4711-9489-95ab33b827e5}",
+            "second_joint_id": "{e381d3c7-b871-4cb3-bab2-d483f8f51e67}"
+        },
+        {
+            "first_joint_id": "{e381d3c7-b871-4cb3-bab2-d483f8f51e67}",
+            "id": "{660aadd6-55b8-4429-858f-580f32bc3d78}",
+            "second_joint_id": "{b6b731ca-779c-4a8b-be7e-bdbc9498342e}"
+        },
+        {
+            "first_joint_id": "{b6b731ca-779c-4a8b-be7e-bdbc9498342e}",
+            "id": "{9eba150b-2b65-4d5f-a42c-6b00b0b32424}",
+            "second_joint_id": "{c946f628-0c9c-4982-99bf-734f3786ba1a}"
+        },
+        {
+            "first_joint_id": "{94cce4c6-5d8d-41b1-bf19-52456c19f9eb}",
+            "id": "{407f85a4-0a94-496f-a5f5-b1521c20abea}",
+            "second_joint_id": "{525d5c9c-cdb6-4976-8c27-b77546f72530}"
+        },
+        {
+            "first_joint_id": "{f47cd34c-928f-4912-912b-f7ace008eb46}",
+            "id": "{5fe82947-7158-4a90-949e-43ca03cece92}",
+            "second_joint_id": "{08322f24-2a48-4ab9-8cfb-95a56caef464}"
+        },
+        {
+            "first_joint_id": "{525d5c9c-cdb6-4976-8c27-b77546f72530}",
+            "id": "{6067d32d-d741-4962-836c-5844630ee378}",
+            "second_joint_id": "{f47cd34c-928f-4912-912b-f7ace008eb46}"
+        }
+    ],
+    "obstacles": [
+        {
+            "id": "{8470d4c2-30b7-4151-bc52-2e1b97def9e5}",
+            "pos_x": 429.0,
+            "pos_y": 87.0
+        },
+        {
+            "id": "{1028647c-f043-4666-a3d9-ceabf8513236}",
+            "pos_x": 310.0,
+            "pos_y": 179.0
+        },
+        {
+            "id": "{13e8708f-fa30-47bb-a8b3-8ae2c5ee10e3}",
+            "pos_x": 427.0,
+            "pos_y": 301.0
+        }
+    ]
+}

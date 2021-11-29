@@ -1,0 +1,134 @@
+{
+    "joints": [
+        {
+            "id": "{fb4fb837-2c16-4246-99e3-0e9f7c2880db}",
+            "locked": true,
+            "pos_x": 132.0,
+            "pos_y": 131.0
+        },
+        {
+            "id": "{98001b3e-7782-495e-925a-269d649c77ff}",
+            "locked": false,
+            "pos_x": 195.53829956054688,
+            "pos_y": 128.24853515625
+        },
+        {
+            "id": "{66193bfb-8e50-42e5-95bc-1a7015eb6d8f}",
+            "locked": false,
+            "pos_x": 255.7193603515625,
+            "pos_y": 105.36406707763672
+        },
+        {
+            "id": "{8c6db564-692f-41d2-a9e8-ef137f650f26}",
+            "locked": false,
+            "pos_x": 318.8980712890625,
+            "pos_y": 73.42493438720703
+        },
+        {
+            "id": "{6228c825-ac56-4639-b444-77ad2c7bf013}",
+            "locked": false,
+            "pos_x": 396.50604248046875,
+            "pos_y": 46.96490478515625
+        },
+        {
+            "id": "{d59b8f94-73cf-4529-a705-4e6e039ddc61}",
+            "locked": false,
+            "pos_x": 465.0030517578125,
+            "pos_y": 52.12309646606445
+        },
+        {
+            "id": "{efc1eef4-5c95-443d-8f7e-d56df9337a3f}",
+            "locked": false,
+            "pos_x": 516.7688598632813,
+            "pos_y": 91.69978332519531
+        },
+        {
+            "id": "{0cc8bb13-a119-4388-8e1b-5a9861008191}",
+            "locked": false,
+            "pos_x": 532.8546142578125,
+            "pos_y": 153.19879150390625
+        },
+        {
+            "id": "{57ea4811-c984-4036-b1fc-03dc9e81156c}",
+            "locked": false,
+            "pos_x": 498.5806884765625,
+            "pos_y": 236.0963134765625
+        },
+        {
+            "id": "{9e07572f-3ec1-4666-a4e5-76070bd3e6b2}",
+            "locked": false,
+            "pos_x": 425.32330322265625,
+            "pos_y": 295.96630859375
+        },
+        {
+            "id": "{628a8e08-b4e5-4dac-9082-47d50353aa56}",
+            "locked": false,
+            "pos_x": 355.78155517578125,
+            "pos_y": 329.24945068359375
+        }
+    ],
+    "links": [
+        {
+            "first_joint_id": "{fb4fb837-2c16-4246-99e3-0e9f7c2880db}",
+            "id": "{191fcf56-40f1-4012-a5b4-8503d0c65a7c}",
+            "second_joint_id": "{98001b3e-7782-495e-925a-269d649c77ff}"
+        },
+        {
+            "first_joint_id": "{98001b3e-7782-495e-925a-269d649c77ff}",
+            "id": "{2493d59b-fc45-478b-8edf-43d45d5cf11e}",
+            "second_joint_id": "{66193bfb-8e50-42e5-95bc-1a7015eb6d8f}"
+        },
+        {
+            "first_joint_id": "{66193bfb-8e50-42e5-95bc-1a7015eb6d8f}",
+            "id": "{28393fc6-f5e3-468d-9420-2af837d0619e}",
+            "second_joint_id": "{8c6db564-692f-41d2-a9e8-ef137f650f26}"
+        },
+        {
+            "first_joint_id": "{8c6db564-692f-41d2-a9e8-ef137f650f26}",
+            "id": "{d98b3eac-662d-4997-9e5e-bd770423a0fa}",
+            "second_joint_id": "{6228c825-ac56-4639-b444-77ad2c7bf013}"
+        },
+        {
+            "first_joint_id": "{6228c825-ac56-4639-b444-77ad2c7bf013}",
+            "id": "{6258c5a2-4367-4228-9938-105a3d2fa6a2}",
+            "second_joint_id": "{d59b8f94-73cf-4529-a705-4e6e039ddc61}"
+        },
+        {
+            "first_joint_id": "{d59b8f94-73cf-4529-a705-4e6e039ddc61}",
+            "id": "{0977d8c2-8782-4bf9-9163-29ecc4738104}",
+            "second_joint_id": "{efc1eef4-5c95-443d-8f7e-d56df9337a3f}"
+        },
+        {
+            "first_joint_id": "{efc1eef4-5c95-443d-8f7e-d56df9337a3f}",
+            "id": "{94760c2e-79a6-4951-969a-4d3bd10d1b46}",
+            "second_joint_id": "{0cc8bb13-a119-4388-8e1b-5a9861008191}"
+        },
+        {
+            "first_joint_id": "{0cc8bb13-a119-4388-8e1b-5a9861008191}",
+            "id": "{d6707f98-5574-4f64-9ae0-8e85671f9b36}",
+            "second_joint_id": "{57ea4811-c984-4036-b1fc-03dc9e81156c}"
+        },
+        {
+            "first_joint_id": "{57ea4811-c984-4036-b1fc-03dc9e81156c}",
+            "id": "{064ba13d-b23a-48c8-8e92-42602f0ff6ee}",
+            "second_joint_id": "{9e07572f-3ec1-4666-a4e5-76070bd3e6b2}"
+        },
+        {
+            "first_joint_id": "{9e07572f-3ec1-4666-a4e5-76070bd3e6b2}",
+            "id": "{43eefedc-5174-463a-9d82-54351f5a23cb}",
+            "second_joint_id": "{628a8e08-b4e5-4dac-9082-47d50353aa56}"
+        }
+    ],
+    "obstacles": [
+        {
+            "id": "{d56e430b-2518-4d88-89c8-580bdb731562}",
+            "pos_x": 311.0,
+            "pos_y": 127.0
+        },
+        {
+            "id": "{8671faf8-934d-4f26-b8d6-1b34b52946cb}",
+            "pos_x": 125.0,
+            "pos_y": 323.0
+        }
+    ]
+}

@@ -1,0 +1,222 @@
+{
+    "joints": [
+        {
+            "id": "{70b02134-f490-4123-befe-d3fc780355f8}",
+            "locked": true,
+            "pos_x": 438.1088562011719,
+            "pos_y": 238.89071655273438
+        },
+        {
+            "id": "{5b7fa9f5-cb1c-4d88-9563-5b96135a6e93}",
+            "locked": false,
+            "pos_x": 371.182373046875,
+            "pos_y": 245.2827606201172
+        },
+        {
+            "id": "{7eec84f2-ad02-4a20-af10-3a1405f71ba3}",
+            "locked": false,
+            "pos_x": 310.4377746582031,
+            "pos_y": 242.1072540283203
+        },
+        {
+            "id": "{5c54d62f-44d8-4b4a-bf1b-39faad7e9a1c}",
+            "locked": false,
+            "pos_x": 258.1861877441406,
+            "pos_y": 245.23277282714844
+        },
+        {
+            "id": "{f38e6bcb-88ea-4500-a831-55432373a510}",
+            "locked": false,
+            "pos_x": 185.51718139648438,
+            "pos_y": 254.40660095214844
+        },
+        {
+            "id": "{57f78c30-598a-4bbd-9d20-4f3f5a2d7fef}",
+            "locked": false,
+            "pos_x": 112.04054260253906,
+            "pos_y": 292.7370910644531
+        },
+        {
+            "id": "{ae2eef8d-1363-4ad9-b8d1-89b73e05dd3d}",
+            "locked": false,
+            "pos_x": 53.509925842285156,
+            "pos_y": 376.49383544921875
+        },
+        {
+            "id": "{f971725f-66cb-4ffc-a3fc-1d1163eaec8c}",
+            "locked": false,
+            "pos_x": 77.23904418945313,
+            "pos_y": 477.927734375
+        },
+        {
+            "id": "{4db95b4e-6349-4ec3-8393-50523bb5d8c2}",
+            "locked": false,
+            "pos_x": 162.39456176757813,
+            "pos_y": 537.31396484375
+        },
+        {
+            "id": "{402c8db2-b869-4cdb-af0f-3e526d9269c8}",
+            "locked": false,
+            "pos_x": 274.28460693359375,
+            "pos_y": 499.6234436035156
+        },
+        {
+            "id": "{d5dc8346-de7d-424e-bb44-908f55ba9c3a}",
+            "locked": false,
+            "pos_x": 357.6041259765625,
+            "pos_y": 451.8858947753906
+        },
+        {
+            "id": "{3cbb60cf-7700-45a0-a0b8-0dba6a7e8db4}",
+            "locked": false,
+            "pos_x": 401.9201354980469,
+            "pos_y": 364.6617431640625
+        },
+        {
+            "id": "{cf1a76ca-c825-4d1c-b0de-aea6f89f4d34}",
+            "locked": false,
+            "pos_x": 490.2733459472656,
+            "pos_y": 265.68890380859375
+        },
+        {
+            "id": "{17d02840-0f7a-4bc8-a191-f57cb3ba4cd5}",
+            "locked": false,
+            "pos_x": 598.245361328125,
+            "pos_y": 297.0912780761719
+        },
+        {
+            "id": "{f6e62510-dcb5-4437-9928-567d6a1467a5}",
+            "locked": false,
+            "pos_x": 697.605712890625,
+            "pos_y": 286.486328125
+        },
+        {
+            "id": "{676048a6-4fd9-4292-a265-d9a41883520d}",
+            "locked": false,
+            "pos_x": 728.3394165039063,
+            "pos_y": 191.61553955078125
+        },
+        {
+            "id": "{3dcac4b3-c8f1-4bda-a625-2b6049296865}",
+            "locked": false,
+            "pos_x": 658.320068359375,
+            "pos_y": 151.33692932128906
+        },
+        {
+            "id": "{dbda247a-5998-4ef4-9da5-cf7d5162be7c}",
+            "locked": false,
+            "pos_x": 564.24560546875,
+            "pos_y": 127.3587646484375
+        },
+        {
+            "id": "{d83ec2e1-8066-4a4f-906d-15bd8fa74bd1}",
+            "locked": false,
+            "pos_x": 460.0955810546875,
+            "pos_y": 131.57151794433594
+        },
+        {
+            "id": "{2ccfb91e-73b9-4045-ba7b-220a6eff7e05}",
+            "locked": true,
+            "pos_x": 398.4761962890625,
+            "pos_y": 142.75326538085938
+        }
+    ],
+    "links": [
+        {
+            "first_joint_id": "{70b02134-f490-4123-befe-d3fc780355f8}",
+            "id": "{44b6110f-5630-47f8-92fe-9fd91b7ad7ac}",
+            "second_joint_id": "{5b7fa9f5-cb1c-4d88-9563-5b96135a6e93}"
+        },
+        {
+            "first_joint_id": "{5b7fa9f5-cb1c-4d88-9563-5b96135a6e93}",
+            "id": "{3bb12f6d-595e-4204-a2f1-e2c99f439140}",
+            "second_joint_id": "{7eec84f2-ad02-4a20-af10-3a1405f71ba3}"
+        },
+        {
+            "first_joint_id": "{7eec84f2-ad02-4a20-af10-3a1405f71ba3}",
+            "id": "{22bd59f0-cd02-492f-a79a-ddffb604bad7}",
+            "second_joint_id": "{5c54d62f-44d8-4b4a-bf1b-39faad7e9a1c}"
+        },
+        {
+            "first_joint_id": "{5c54d62f-44d8-4b4a-bf1b-39faad7e9a1c}",
+            "id": "{145232bb-0090-4eb4-bcd8-e2708c09d1cf}",
+            "second_joint_id": "{f38e6bcb-88ea-4500-a831-55432373a510}"
+        },
+        {
+            "first_joint_id": "{f38e6bcb-88ea-4500-a831-55432373a510}",
+            "id": "{710db9e7-71bc-438d-8186-366ed031ade1}",
+            "second_joint_id": "{57f78c30-598a-4bbd-9d20-4f3f5a2d7fef}"
+        },
+        {
+            "first_joint_id": "{57f78c30-598a-4bbd-9d20-4f3f5a2d7fef}",
+            "id": "{0c17347b-a51f-431c-a92a-89ddfd3d0df1}",
+            "second_joint_id": "{ae2eef8d-1363-4ad9-b8d1-89b73e05dd3d}"
+        },
+        {
+            "first_joint_id": "{ae2eef8d-1363-4ad9-b8d1-89b73e05dd3d}",
+            "id": "{b6747cc2-7fa1-4403-83de-2c6d5f20dc2c}",
+            "second_joint_id": "{f971725f-66cb-4ffc-a3fc-1d1163eaec8c}"
+        },
+        {
+            "first_joint_id": "{f971725f-66cb-4ffc-a3fc-1d1163eaec8c}",
+            "id": "{60ad4ad8-13eb-4db8-b0d7-a281c3f0c5f5}",
+            "second_joint_id": "{4db95b4e-6349-4ec3-8393-50523bb5d8c2}"
+        },
+        {
+            "first_joint_id": "{4db95b4e-6349-4ec3-8393-50523bb5d8c2}",
+            "id": "{94efe33e-6ed2-4c6d-aad4-56c7af90205c}",
+            "second_joint_id": "{402c8db2-b869-4cdb-af0f-3e526d9269c8}"
+        },
+        {
+            "first_joint_id": "{402c8db2-b869-4cdb-af0f-3e526d9269c8}",
+            "id": "{52889a65-a8d1-472a-8dc5-177736fdc244}",
+            "second_joint_id": "{d5dc8346-de7d-424e-bb44-908f55ba9c3a}"
+        },
+        {
+            "first_joint_id": "{d5dc8346-de7d-424e-bb44-908f55ba9c3a}",
+            "id": "{bba2ef72-a83d-41e9-b38c-e8254bd16407}",
+            "second_joint_id": "{3cbb60cf-7700-45a0-a0b8-0dba6a7e8db4}"
+        },
+        {
+            "first_joint_id": "{3cbb60cf-7700-45a0-a0b8-0dba6a7e8db4}",
+            "id": "{a74710e9-b107-4e43-bac5-172c3168a3fe}",
+            "second_joint_id": "{cf1a76ca-c825-4d1c-b0de-aea6f89f4d34}"
+        },
+        {
+            "first_joint_id": "{cf1a76ca-c825-4d1c-b0de-aea6f89f4d34}",
+            "id": "{fd7e6d03-cbee-4dde-83f6-30083b30c231}",
+            "second_joint_id": "{17d02840-0f7a-4bc8-a191-f57cb3ba4cd5}"
+        },
+        {
+            "first_joint_id": "{17d02840-0f7a-4bc8-a191-f57cb3ba4cd5}",
+            "id": "{364f95f5-7e51-4796-8f07-085b5b90ca9b}",
+            "second_joint_id": "{f6e62510-dcb5-4437-9928-567d6a1467a5}"
+        },
+        {
+            "first_joint_id": "{f6e62510-dcb5-4437-9928-567d6a1467a5}",
+            "id": "{edcfb3c9-366d-4df3-9e90-697b91c46088}",
+            "second_joint_id": "{676048a6-4fd9-4292-a265-d9a41883520d}"
+        },
+        {
+            "first_joint_id": "{676048a6-4fd9-4292-a265-d9a41883520d}",
+            "id": "{08001799-26b3-4e62-a10d-93b05ffe6abc}",
+            "second_joint_id": "{3dcac4b3-c8f1-4bda-a625-2b6049296865}"
+        },
+        {
+            "first_joint_id": "{3dcac4b3-c8f1-4bda-a625-2b6049296865}",
+            "id": "{6e88e688-524c-44a5-9e86-42998d7dda82}",
+            "second_joint_id": "{dbda247a-5998-4ef4-9da5-cf7d5162be7c}"
+        },
+        {
+            "first_joint_id": "{dbda247a-5998-4ef4-9da5-cf7d5162be7c}",
+            "id": "{884b95f3-672a-4a7e-b68b-b99df270af53}",
+            "second_joint_id": "{d83ec2e1-8066-4a4f-906d-15bd8fa74bd1}"
+        },
+        {
+            "first_joint_id": "{d83ec2e1-8066-4a4f-906d-15bd8fa74bd1}",
+            "id": "{ba88b110-1260-4084-a7a6-83a5a90ba871}",
+            "second_joint_id": "{2ccfb91e-73b9-4045-ba7b-220a6eff7e05}"
+        }
+    ],
+    "obstacles": []
+}
